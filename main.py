@@ -1,9 +1,18 @@
 from fastapi import FastAPI
+from create_db import create_db
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def life_span(app:FastAPI):
+  await create_db()
+  yield
+
 
 app = FastAPI(
-  title="Login",
-  docs_url="/",
-  description="This is a app of login"
+  title = "Login",
+  docs_url = "/",
+  description = "This is a app of login",
+  lifespan = life_span
 )
 
 @app.get("/users")
