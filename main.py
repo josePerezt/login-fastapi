@@ -1,11 +1,5 @@
 from fastapi import FastAPI
-from create_db import create_db
-from contextlib import asynccontextmanager
-
-@asynccontextmanager
-async def life_span(app:FastAPI):
-  await create_db()
-  yield
+from create_db import life_span
 
 
 app = FastAPI(
