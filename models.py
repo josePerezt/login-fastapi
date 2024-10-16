@@ -10,7 +10,7 @@ class User(BASE):
   name: Mapped[str] = mapped_column(String(30),nullable=False,unique=True)
   email:Mapped[str] = mapped_column(String(200),nullable=False,unique=True)
   password: Mapped[str] = mapped_column(String(255), nullable=False)
-  code_password: Mapped[int] = mapped_column(Integer)
+  code_password: Mapped[int] = mapped_column(Integer,nullable=True)
   is_active : Mapped[bool] = mapped_column(Boolean,default=True)
   
   def __str__(self):

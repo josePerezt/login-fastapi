@@ -1,7 +1,7 @@
 
 from db import engine,BASE
-from contextlib import asynccontextmanager
-from fastapi import FastAPI
+import asyncio
+
 
 # Funcion que crea la base de datos
 async def create_db():
@@ -12,9 +12,5 @@ async def create_db():
     await conn.run_sync(BASE.metadata.create_all)
   
   await engine.dispose()
-  
-# funcion que crea la base de datos CUANDO se inicia la app
-@asynccontextmanager
-async def life_span(app:FastAPI):
-  await create_db()
-  yield
+
+asyncio.run(create_db())
