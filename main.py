@@ -31,6 +31,7 @@ async def get_user_by_email(user_email:str,db:AsyncSession = Depends(get_db)):
   
   user_db = await crud.get_user_by_email(user_email,db)
   
+  # serializamos el modelo para retornarlo como json
   user_serializer = model_serializer(user_db)
   
   if not user_db:
