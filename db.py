@@ -10,7 +10,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 BASE =declarative_base()
 
-engine = create_async_engine(DATABASE_URL,echo=True)
+engine = create_async_engine(DATABASE_URL)
 
 async_session_local = async_sessionmaker(
   bind=engine,
