@@ -4,10 +4,8 @@ from schemas import UserResponse,UserCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import get_db
 from crud import CRUD
-
+from utils.serializer import model_serializer
 crud = CRUD()
-
-
 
 
 app = FastAPI(
@@ -28,28 +26,38 @@ async def get_all_users(db:AsyncSession = Depends(get_db)):
   return db_users
 
 
-@app.get("/users/{user_id}",tags=["users"] )
-async def get_user_by_id(user_id:int):
-  return {"message":"usuario por id"}
+@app.get("/users/{user_email}",tags=["users"],response_model=UserResponse)
+async def get_user_by_email(user_email:str,db:AsyncSession = Depends(get_db)):
+  
+  user_db = await crud.get_user_by_email(user_email,db)
+  
+  user_serializer = model_serializer(user_db)
+  
+  if not user_db:
+    raise HTTPException(status_code=404, detail="User not found")
+  
+  return JSONResponse(content=user_serializer, status_code=200)
 
 
 @app.post("/users", tags=["users"],response_model=UserResponse)
 async def create_user(user:UserCreate,db:AsyncSession = Depends(get_db)):
   
-  query = await crud.create_user(user,db)
+  query_user_create = await crud.create_user(user,db)
   
-  if query is None:
+  user_create = model_serializer(query_user_create)
+  
+  if query_user_create is None:
     raise HTTPException(status_code=400, detail="The username or email already exists")
   
   
   return JSONResponse(content = {"messages":"Created successfully",
-                                 "data":UserResponse(id=query.id,name=query.name,email=query.email,is_active=query.is_active).model_dump()
+                                 "data":user_create
                                  },status_code = 200)
 
 
-@app.put("/users/{user_id}",tags=["users"])
-async def create_user(usr_id:int):
-  return {"message":"Usuario actualizado"}
+@app.put("/users/{user_email}",tags=["users"])
+async def upadte_user():
+    pass
 
 
 @app.delete("/users/{user_id}",tags=["users"])
