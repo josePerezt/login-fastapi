@@ -8,9 +8,8 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
   password: str = Field(...,min_length = 8, max_length = 16)
   
-class UserUpdatePassword(BaseModel):
-  password: str = Field(...,min_length=8)
-  new_password: str= Field(...,min_length=8)
+class UserUpdateActive(BaseModel):
+  is_active: bool
   
   
 class UserResponse(UserBase):

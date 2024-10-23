@@ -1,6 +1,6 @@
 from fastapi import FastAPI,Depends,HTTPException
 from fastapi.responses import JSONResponse
-from schemas import UserResponse,UserCreate
+from schemas import UserResponse,UserCreate,UserUpdateActive
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import get_db
 from crud import CRUD
@@ -56,10 +56,17 @@ async def create_user(user:UserCreate,db:AsyncSession = Depends(get_db)):
                                  },status_code = 200)
 
 
-@app.put("/users/{user_email}",tags=["users"])
-async def upadte_user():
-    pass
-
+@app.patch("/users/{user_name}",tags=["users"])
+async def update_user(user_name,is_active:bool,db:AsyncSession = Depends(get_db)):
+  
+  user_update = await crud.update_user(user_name,is_active,db)
+  
+  if not user_update:
+    raise HTTPException(status_code=404,detail="user not found")
+  
+  response = model_serializer(user_update) 
+  
+  return JSONResponse(content=response, status_code=200)
 
 @app.delete("/users/{user_id}",tags=["users"])
 async def get_all_users(user_id:int):
