@@ -3,7 +3,7 @@ from models import User
 # importamos la session
 from sqlalchemy.ext.asyncio import AsyncSession
 from schemas import UserCreate,UserResponse
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, update
 from AUTH.pwd_bcrypt import generate_password_hash
 
 
@@ -56,20 +56,30 @@ class CRUD:
   
   async def update_user(self,user_name,is_active,db:AsyncSession):
     
-    query = select(User).filter(User.name == user_name )
+    query = select(User).where(User.name == user_name)
     
-    user_db = await db.execute(query)
+    result = await db.execute(query)
     
-    result = user_db.scalars().first()
+    data_user = result.scalar_one_or_none()
     
-    if not result:
+    if not data_user:
       return None
     
-    result.is_active = is_active
+    else:
+      query_update = update(User).where(User.name == user_name).values(is_active = is_active)
     
-    await db.commit()
-    await db.refresh(result)
-    return result
+      await db.execute(query_update)
+      await db.commit()
+      
+    query_response = select(User).where(User.name == user_name)
+    
+    user_update = await db.execute(query_response)
+    
+    return user_update.scalar_one()
+    
+      
+    
+  
     
   async def delete_user(self,user_id, db:AsyncSession):
     
