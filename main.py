@@ -1,10 +1,10 @@
-from fastapi import FastAPI,Depends,HTTPException
+from fastapi import FastAPI,Depends,HTTPException,status
 from fastapi.responses import JSONResponse
-from schemas import UserResponse,UserCreate,UserUpdateActive
+from schemas import UserResponse,UserCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import get_db
 from crud import CRUD
-from utils.serializer import model_serializer
+
 crud = CRUD()
 
 
@@ -31,43 +31,45 @@ async def get_user_by_email(user_email:str,db:AsyncSession = Depends(get_db)):
   
   user_db = await crud.get_user_by_email(user_email,db)
   
-  # serializamos el modelo para retornarlo como json
-  user_serializer = model_serializer(user_db)
-  
   if not user_db:
-    raise HTTPException(status_code=404, detail="User not found")
+    raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="User not found")
   
-  return JSONResponse(content=user_serializer, status_code=200)
+  return JSONResponse(content = user_db, status_code = status.HTTP_200_OK)
 
 
 @app.post("/users", tags=["users"],response_model=UserResponse)
 async def create_user(user:UserCreate,db:AsyncSession = Depends(get_db)):
   
-  query_user_create = await crud.create_user(user,db)
+  user_create = await crud.create_user(user,db)
   
-  user_create = model_serializer(query_user_create)
-  
-  if query_user_create is None:
-    raise HTTPException(status_code=400, detail="The username or email already exists")
-  
-  
+  if user_create is None:
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The username or email already exists")
+
+  data = UserResponse.from_orm(user_create).model_dump()
+   
   return JSONResponse(content = {"messages":"Created successfully",
-                                 "data":user_create
-                                 },status_code = 200)
+                                 "data":data
+                                 },status_code = status.HTTP_201_CREATED)
 
 
-@app.patch("/users/{user_name}",tags=["users"])
+@app.patch("/users/{user_name}",tags=["users"],response_model=UserResponse)
 async def update_user(user_name,is_active:bool,db:AsyncSession = Depends(get_db)):
   
   user_update = await crud.update_user(user_name,is_active,db)
   
   if not user_update:
-    raise HTTPException(status_code=404,detail="user not found")
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="user not found")
   
-  response = model_serializer(user_update) 
+  data = UserResponse.from_orm(user_update).model_dump()
   
-  return JSONResponse(content=response, status_code=200)
+  return JSONResponse(content = data, status_code=status.HTTP_200_OK)
 
-@app.delete("/users/{user_id}",tags=["users"])
-async def get_all_users(user_id:int):
-  return {"message":"usuario eliminado"}
+@app.delete("/users/{user_id}",tags=["users"], response_model=dict)
+async def delete_user(user_id:int,db:AsyncSession = Depends(get_db)):
+  
+  results = await crud.delete_user(user_id,db)
+  
+  if not results:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found or already deleted ")
+  
+  return JSONResponse(content=results,status_code=status.HTTP_200_OK)

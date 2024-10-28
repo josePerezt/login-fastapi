@@ -1,5 +1,4 @@
 from pydantic import BaseModel,Field
-from typing import Optional
 
 class UserBase(BaseModel):
   name:str = Field(min_length = 5, max_length = 15 )
@@ -9,13 +8,12 @@ class UserCreate(UserBase):
   password: str = Field(...,min_length = 8, max_length = 16)
   
 class UserUpdateActive(BaseModel):
-  is_active: bool
-  
+  is_active: bool 
   
 class UserResponse(UserBase):
   id : int
   is_active : bool
   
-  class config:
-    orm_mode : True
-    from_attributes = True
+  class Config:
+    orm_mode=True
+    from_attributes=True

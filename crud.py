@@ -2,8 +2,8 @@
 from models import User
 # importamos la session
 from sqlalchemy.ext.asyncio import AsyncSession
-from schemas import UserCreate,UserUpdateActive
-from sqlalchemy import select
+from schemas import UserCreate,UserResponse
+from sqlalchemy import select, delete
 from AUTH.pwd_bcrypt import generate_password_hash
 
 
@@ -51,14 +51,15 @@ class CRUD:
       return None
     
     user_data = user.scalars().first()
-    
+
     return user_data
   
   async def update_user(self,user_name,is_active,db:AsyncSession):
     
-    query_user_db = select(User).filter(User.name == user_name )
+    query = select(User).filter(User.name == user_name )
     
-    user_db = await db.execute(query_user_db)
+    user_db = await db.execute(query)
+    
     result = user_db.scalars().first()
     
     if not result:
@@ -70,7 +71,20 @@ class CRUD:
     await db.refresh(result)
     return result
     
+  async def delete_user(self,user_id, db:AsyncSession):
     
+    query = delete(User).where(User.id == user_id).returning(User.name)
+    
+    results = await db.execute(query)
+    
+    print(results.scalar())
+    
+    if not results.scalar():
+      return None
+    
+    await db.commit()
+    return {"message":F"User '{User.name}' deleted successfully"}
+  
     
     
     
