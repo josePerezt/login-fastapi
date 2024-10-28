@@ -56,30 +56,26 @@ class CRUD:
   
   async def update_user(self,user_name,is_active,db:AsyncSession):
     
-    query = select(User).where(User.name == user_name)
+    # Se busca el usuario y se valida su existencia en la DB
+    query = await db.execute(select(User).where(User.name == user_name))
+
+    data_user = query.scalar_one_or_none()
     
-    result = await db.execute(query)
-    
-    data_user = result.scalar_one_or_none()
-    
+    # si no se obtinee resultado se retorna NONE
     if not data_user:
       return None
     
+    # si el usuario existe se actualiza
     else:
       query_update = update(User).where(User.name == user_name).values(is_active = is_active)
     
       await db.execute(query_update)
       await db.commit()
       
-    query_response = select(User).where(User.name == user_name)
-    
-    user_update = await db.execute(query_response)
-    
-    return user_update.scalar_one()
-    
-      
-    
+    # se retorn ael usuario actualizado
+    user_update = await db.execute(select(User).where(User.name == user_name))
   
+    return user_update.scalar_one()
     
   async def delete_user(self,user_id, db:AsyncSession):
     
