@@ -34,7 +34,9 @@ async def get_user_by_email(user_email:str,db:AsyncSession = Depends(get_db)):
   if not user_db:
     raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="User not found")
   
-  return JSONResponse(content = user_db, status_code = status.HTTP_200_OK)
+  data = UserResponse.from_orm(user_db).model_dump()
+  
+  return JSONResponse(content = data, status_code = status.HTTP_200_OK)
 
 
 @app.post("/users", tags=["users"],response_model=UserResponse)
