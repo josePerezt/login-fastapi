@@ -91,6 +91,16 @@ class CRUD:
     await db.commit()
     return {"message":F"User '{User.name}' deleted successfully"}
   
+  async def get_user_by_name(self,form_data,db:AsyncSession):
+    
+    query = select(User).filter(User.name == form_data.username)
+    
+    user_db = await db.execute(query)
+    
+    user_response = user_db.scalar_one_or_none()
+    
+    return user_response
+  
     
     
     
